@@ -2,6 +2,7 @@
 
 namespace App\Library\Adapters\Inbound\Http\Controllers;
 
+use App\Library\Application\Services\BookCoverService;
 use App\Library\Application\Services\CreateBookService;
 use App\Library\Application\Services\DeleteBookService;
 use App\Library\Application\Services\SearchBooksService;
@@ -56,6 +57,29 @@ final class BookController
         $update->update($id, $data['title'], $data['author'], $data['category_id'], (int) $data['total_copies']);
 
         return response()->json($search->get($id));
+    }
+
+    public function uploadCover(string $id, Request $request, BookCoverService $covers, SearchBooksService $search): JsonResponse
+    {
+        $request->validate(['file' => ['required', 'file']]);
+        $covers->upload($id, (string) file_get_contents($request->file('file')->getRealPath()));
+
+        return response()->json($search->get($id));
+    }
+
+    public function showCover(string $id, BookCoverService $covers): Response
+    {
+        $bytes = $covers->read($id);
+        $type = str_starts_with($bytes, "\x89PNG") ? 'image/png' : 'image/jpeg';
+
+        return response($bytes, 200, ['Content-Type' => $type]);
+    }
+
+    public function removeCover(string $id, BookCoverService $covers): Response
+    {
+        $covers->remove($id);
+
+        return response()->noContent();
     }
 
     public function destroy(string $id, DeleteBookService $service): Response

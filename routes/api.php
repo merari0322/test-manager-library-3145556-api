@@ -15,6 +15,7 @@ Route::middleware('library.auth')->group(function () {
     Route::get('/categories', [BookController::class, 'categories']);
     Route::get('/books', [BookController::class, 'index']);
     Route::get('/books/{id}', [BookController::class, 'show'])->whereUuid('id');
+    Route::get('/books/{id}/cover', [BookController::class, 'showCover'])->whereUuid('id');
 });
 
 Route::middleware('library.auth:admin')->group(function () {
@@ -22,6 +23,8 @@ Route::middleware('library.auth:admin')->group(function () {
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{id}', [BookController::class, 'update'])->whereUuid('id');
     Route::delete('/books/{id}', [BookController::class, 'destroy'])->whereUuid('id');
+    Route::put('/books/{id}/cover', [BookController::class, 'uploadCover'])->whereUuid('id');
+    Route::delete('/books/{id}/cover', [BookController::class, 'removeCover'])->whereUuid('id');
     Route::get('/reports/most-borrowed', [LoanController::class, 'report']);
 });
 

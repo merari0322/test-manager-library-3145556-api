@@ -14,5 +14,8 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev \
     && mkdir -p var/covers storage/framework/cache storage/framework/views storage/logs
 ENV SESSION_DRIVER=array CACHE_STORE=array QUEUE_CONNECTION=sync LOG_CHANNEL=stderr
+# Let uploads above 2 MB reach the app so it answers 422 itself (CA-03.4, T-15).
+RUN echo "upload_max_filesize=8M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size=8M" >> /usr/local/etc/php/conf.d/uploads.ini
 EXPOSE 8000
 CMD ["sh", "-c", "php artisan migrate --force && php artisan library:create-admin && php artisan serve --host=0.0.0.0 --port=8000"]
