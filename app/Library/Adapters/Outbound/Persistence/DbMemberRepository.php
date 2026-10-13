@@ -5,6 +5,8 @@ namespace App\Library\Adapters\Outbound\Persistence;
 use App\Library\Application\Ports\MemberRepository;
 use App\Library\Domain\Errors\DocumentTaken;
 use App\Library\Domain\Member;
+use DateTimeImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +25,27 @@ final class DbMemberRepository implements MemberRepository
         }
     }
 
+    public function exists(string $id): bool
+    {
+        return DB::table('member')->where('id', $id)->exists();
+    }
+
+    public function unreturnedCount(string $id): int
+    {
+        return $this->unreturned($id)->count();
+    }
+
+    public function hasOverdue(string $id, DateTimeImmutable $now): bool
+    {
+        return $this->unreturned($id)->where('i.due_at', '<', $now->format(DATE_ATOM))->exists();
+    }
+
+    private function unreturned(string $id): Builder
+    {
+        return DB::table('loan_item as i')->join('loan as l', 'l.id', '=', 'i.loan_id')
+            ->where('l.member_id', $id)->whereNull('i.returned_at');
+    }
+
     public function view(string $id): ?array
     {
         $row = DB::table('member')->where('id', $id)->first();
@@ -30,10 +53,7 @@ final class DbMemberRepository implements MemberRepository
             return null;
         }
 
-        $active = DB::table('loan_item as i')->join('loan as l', 'l.id', '=', 'i.loan_id')
-            ->where('l.member_id', $id)->whereNull('i.returned_at')->count();
-
-        return $this->toArray($row) + ['active_loans' => $active];
+        return $this->toArray($row) + ['active_loans' => $this->unreturnedCount($id)];
     }
 
     public function search(?string $q, int $page, int $size): array

@@ -2,6 +2,7 @@
 
 use App\Library\Adapters\Inbound\Http\Controllers\AuthController;
 use App\Library\Adapters\Inbound\Http\Controllers\BookController;
+use App\Library\Adapters\Inbound\Http\Controllers\LoanController;
 use App\Library\Adapters\Inbound\Http\Controllers\MemberController;
 use App\Library\Adapters\Inbound\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -27,4 +28,11 @@ Route::middleware('library.auth:admin,librarian')->group(function () {
     Route::get('/members', [MemberController::class, 'index']);
     Route::get('/members/{id}', [MemberController::class, 'show'])->whereUuid('id');
     Route::post('/members', [MemberController::class, 'store']);
+
+    // /loans/overdue is registered before /loans/{id} so it is not taken as an id.
+    Route::get('/loans/overdue', [LoanController::class, 'overdue']);
+    Route::post('/loans', [LoanController::class, 'store']);
+    Route::get('/loans/{id}', [LoanController::class, 'show'])->whereUuid('id');
+    Route::post('/loans/{loan_id}/items/{item_id}/return', [LoanController::class, 'return'])
+        ->whereUuid(['loan_id', 'item_id']);
 });

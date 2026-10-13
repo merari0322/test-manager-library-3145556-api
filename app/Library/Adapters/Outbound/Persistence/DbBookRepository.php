@@ -45,6 +45,11 @@ final class DbBookRepository implements BookRepository
         return DB::table('category')->where('id', $categoryId)->exists();
     }
 
+    public function categoryName(string $categoryId): string
+    {
+        return (string) DB::table('category')->where('id', $categoryId)->value('name');
+    }
+
     public function categories(): array
     {
         return DB::table('category')->orderBy('name')->get(['id', 'name'])
