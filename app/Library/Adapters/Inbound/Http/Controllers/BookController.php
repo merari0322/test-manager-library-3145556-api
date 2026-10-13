@@ -5,6 +5,7 @@ namespace App\Library\Adapters\Inbound\Http\Controllers;
 use App\Library\Application\Services\BookCoverService;
 use App\Library\Application\Services\CreateBookService;
 use App\Library\Application\Services\DeleteBookService;
+use App\Library\Application\Services\ListCategoriesService;
 use App\Library\Application\Services\SearchBooksService;
 use App\Library\Application\Services\UpdateBookService;
 use Illuminate\Http\JsonResponse;
@@ -20,9 +21,9 @@ final class BookController
         'total_copies' => ['required', 'integer'],
     ];
 
-    public function categories(SearchBooksService $service): JsonResponse
+    public function categories(ListCategoriesService $service): JsonResponse
     {
-        return response()->json($service->categories());
+        return response()->json($service->list());
     }
 
     public function index(Request $request, SearchBooksService $service): JsonResponse

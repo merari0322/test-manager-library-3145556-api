@@ -2,6 +2,7 @@
 
 namespace App\Library\Adapters\Inbound\Http\Controllers;
 
+use App\Library\Application\Services\GetLoanService;
 use App\Library\Application\Services\LendBooksService;
 use App\Library\Application\Services\ListLoansService;
 use App\Library\Application\Services\MostBorrowedReportService;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 
 final class LoanController
 {
-    public function store(Request $request, LendBooksService $lend, OverdueService $query): JsonResponse
+    public function store(Request $request, LendBooksService $lend, GetLoanService $query): JsonResponse
     {
         $data = $request->validate([
             'member_id' => ['required', 'uuid'],
@@ -30,7 +31,7 @@ final class LoanController
         return response()->json($this->loan($loan, $query->now()), 201);
     }
 
-    public function index(Request $request, ListLoansService $list, OverdueService $query): JsonResponse
+    public function index(Request $request, ListLoansService $list, GetLoanService $query): JsonResponse
     {
         $data = $request->validate([
             'from' => ['nullable', 'date_format:Y-m-d', 'required_with:to'],
@@ -59,7 +60,7 @@ final class LoanController
         return response()->json($service->report($data['from'], $data['to']));
     }
 
-    public function show(string $id, OverdueService $query): JsonResponse
+    public function show(string $id, GetLoanService $query): JsonResponse
     {
         return response()->json($this->loan($query->get($id), $query->now()));
     }

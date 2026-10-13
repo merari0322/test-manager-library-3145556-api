@@ -5,7 +5,7 @@ namespace App\Library\Application\Services;
 use App\Library\Application\Ports\BookRepository;
 use App\Library\Domain\Errors\NotFound;
 
-/** HU-04: search books and get one book; also lists the categories of the catalog. */
+/** HU-04: search books and get one book. */
 final class SearchBooksService
 {
     public function __construct(private readonly BookRepository $books)
@@ -21,10 +21,5 @@ final class SearchBooksService
     public function get(string $id): array
     {
         return $this->books->view($id) ?? throw new NotFound('El libro no existe.');
-    }
-
-    public function categories(): array
-    {
-        return $this->books->categories();
     }
 }
