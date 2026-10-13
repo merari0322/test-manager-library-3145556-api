@@ -17,6 +17,8 @@ interface BookRepository
 
     public function categoryExists(string $categoryId): bool;
 
+    public function categoryName(string $categoryId): string;
+
     /** Q4: the five categories ordered by name. @return list<array{id: string, name: string}> */
     public function categories(): array;
 

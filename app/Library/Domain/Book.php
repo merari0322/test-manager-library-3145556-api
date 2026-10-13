@@ -2,6 +2,7 @@
 
 namespace App\Library\Domain;
 
+use App\Library\Domain\Errors\BookNotAvailable;
 use App\Library\Domain\Errors\ValidationFailed;
 use DateTimeImmutable;
 
@@ -49,6 +50,23 @@ final class Book
         $this->categoryId = $categoryId;
         $this->totalCopies = $total->value;
         $this->availableCopies = $available;
+    }
+
+    /** CA-06.3: each loan line takes one available copy. */
+    public function withdraw(): void
+    {
+        if ($this->availableCopies < 1) {
+            throw new BookNotAvailable("No quedan ejemplares disponibles de «{$this->title}».");
+        }
+        $this->availableCopies--;
+    }
+
+    /** CA-07.1 and CA-07.3: a return adds one copy, never above the total. */
+    public function restock(): void
+    {
+        if ($this->availableCopies < $this->totalCopies) {
+            $this->availableCopies++;
+        }
     }
 
     /** CA-03.5: logical delete. */
