@@ -3,6 +3,7 @@
 namespace App\Library\Adapters\Outbound\Persistence;
 
 use App\Library\Application\Ports\LoanRepository;
+use App\Library\Domain\DateRange;
 use App\Library\Domain\Errors\BookNotAvailable;
 use App\Library\Domain\Errors\ItemAlreadyReturned;
 use App\Library\Domain\Loan;
@@ -73,6 +74,33 @@ final class DbLoanRepository implements LoanRepository
 
             DB::table('book')->where('id', $item->bookId)->increment('available_copies');
         });
+    }
+
+    public function search(?DateRange $range, ?string $status, ?string $memberId, DateTimeImmutable $now, int $page, int $size): array
+    {
+        $query = DB::table('loan as l');
+        if ($range !== null) {
+            $query->where('l.loaned_at', '>=', $range->from->format(DATE_ATOM))
+                ->where('l.loaned_at', '<', $range->endExclusive()->format(DATE_ATOM));
+        }
+        if ($memberId !== null) {
+            $query->where('l.member_id', $memberId);
+        }
+
+        // Article VII: the status is derived from the lines, not stored.
+        $unreturned = fn ($q) => $q->from('loan_item as i')->whereColumn('i.loan_id', 'l.id')->whereNull('i.returned_at');
+        $late = fn ($q) => $unreturned($q)->where('i.due_at', '<', $now->format(DATE_ATOM));
+        match ($status) {
+            'closed' => $query->whereNotExists($unreturned),
+            'overdue' => $query->whereExists($late),
+            'open' => $query->whereExists($unreturned)->whereNotExists($late),
+            default => null,
+        };
+
+        $total = (clone $query)->count();
+        $ids = $query->orderByDesc('l.loaned_at')->offset(($page - 1) * $size)->limit($size)->pluck('l.id');
+
+        return ['items' => $ids->map(fn ($id) => $this->get($id))->all(), 'total' => $total];
     }
 
     public function overdue(DateTimeImmutable $now): array

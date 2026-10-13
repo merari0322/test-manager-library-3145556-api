@@ -22,6 +22,7 @@ Route::middleware('library.auth:admin')->group(function () {
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{id}', [BookController::class, 'update'])->whereUuid('id');
     Route::delete('/books/{id}', [BookController::class, 'destroy'])->whereUuid('id');
+    Route::get('/reports/most-borrowed', [LoanController::class, 'report']);
 });
 
 Route::middleware('library.auth:admin,librarian')->group(function () {
@@ -31,6 +32,7 @@ Route::middleware('library.auth:admin,librarian')->group(function () {
 
     // /loans/overdue is registered before /loans/{id} so it is not taken as an id.
     Route::get('/loans/overdue', [LoanController::class, 'overdue']);
+    Route::get('/loans', [LoanController::class, 'index']);
     Route::post('/loans', [LoanController::class, 'store']);
     Route::get('/loans/{id}', [LoanController::class, 'show'])->whereUuid('id');
     Route::post('/loans/{loan_id}/items/{item_id}/return', [LoanController::class, 'return'])

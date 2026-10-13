@@ -3,6 +3,8 @@
 namespace App\Library\Adapters\Inbound\Http\Controllers;
 
 use App\Library\Application\Services\LendBooksService;
+use App\Library\Application\Services\ListLoansService;
+use App\Library\Application\Services\MostBorrowedReportService;
 use App\Library\Application\Services\OverdueService;
 use App\Library\Application\Services\ReturnItemService;
 use App\Library\Domain\Loan;
@@ -26,6 +28,35 @@ final class LoanController
             array_map(fn ($i) => $i['book_id'], $data['items']));
 
         return response()->json($this->loan($loan, $query->now()), 201);
+    }
+
+    public function index(Request $request, ListLoansService $list, OverdueService $query): JsonResponse
+    {
+        $data = $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d', 'required_with:to'],
+            'to' => ['nullable', 'date_format:Y-m-d', 'required_with:from'],
+            'status' => ['nullable', 'in:open,overdue,closed'],
+            'member_id' => ['nullable', 'uuid'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'size' => ['nullable', 'integer', 'min:1', 'max:50'],
+        ]);
+
+        $result = $list->list($data['from'] ?? null, $data['to'] ?? null, $data['status'] ?? null,
+            $data['member_id'] ?? null, (int) ($data['page'] ?? 1), (int) ($data['size'] ?? 20));
+        $now = $query->now();
+        $result['items'] = array_map(fn (Loan $l) => $this->loan($l, $now), $result['items']);
+
+        return response()->json($result);
+    }
+
+    public function report(Request $request, MostBorrowedReportService $service): JsonResponse
+    {
+        $data = $request->validate([
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        return response()->json($service->report($data['from'], $data['to']));
     }
 
     public function show(string $id, OverdueService $query): JsonResponse
