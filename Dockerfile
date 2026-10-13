@@ -15,4 +15,4 @@ RUN composer dump-autoload --optimize --no-dev \
     && mkdir -p var/covers storage/framework/cache storage/framework/views storage/logs
 ENV SESSION_DRIVER=array CACHE_STORE=array QUEUE_CONNECTION=sync LOG_CHANNEL=stderr
 EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan library:create-admin && php artisan serve --host=0.0.0.0 --port=8000"]

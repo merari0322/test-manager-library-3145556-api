@@ -1,7 +1,7 @@
 <?php
 
-use App\Providers\AppServiceProvider;
+use App\Library\Bootstrap\PortBindings;
 
 return [
-    AppServiceProvider::class,
+    PortBindings::class,
 ];
