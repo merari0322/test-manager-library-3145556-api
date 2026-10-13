@@ -9,7 +9,9 @@ use App\Library\Adapters\Outbound\Persistence\DbReportReader;
 use App\Library\Adapters\Outbound\Persistence\DbUserRepository;
 use App\Library\Adapters\Outbound\Security\BcryptPasswordHasher;
 use App\Library\Adapters\Outbound\Security\JwtTokenIssuer;
+use App\Library\Adapters\Outbound\Storage\DiskCoverStorage;
 use App\Library\Adapters\Outbound\SystemClock;
+use App\Library\Application\Ports\CoverStorage;
 use App\Library\Application\Ports\BookRepository;
 use App\Library\Application\Ports\Clock;
 use App\Library\Application\Ports\LoanRepository;
@@ -32,6 +34,7 @@ final class PortBindings extends ServiceProvider
         $this->app->singleton(ReportReader::class, DbReportReader::class);
         $this->app->singleton(PasswordHasher::class, BcryptPasswordHasher::class);
         $this->app->singleton(Clock::class, SystemClock::class);
+        $this->app->singleton(CoverStorage::class, fn () => new DiskCoverStorage(base_path((string) env('COVERS_DIR', './var/covers'))));
         $this->app->singleton(TokenIssuer::class, fn () => new JwtTokenIssuer((string) env('JWT_SECRET')));
     }
 }
